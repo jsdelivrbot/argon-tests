@@ -1,0 +1,22 @@
+{
+  "devDependencies": {
+    "@argonjs/argon": "^1.4.0-36",
+    "@types/dat-gui": "^0.5.28",
+    "@types/googlemaps": "^3.20.30",
+    "@types/stats": "^0.16.29",
+    "@types/three": "^0.83.5",
+    "@types/tween.js": "0.0.27",
+    "express": "^4.15.2",
+    "pem": "^1.9.4",
+    "typescript": "^2.1.4"
+  },
+  "scripts": {
+    "serve": "npm start",
+    "devsite": "jekyll build --config _config-develop.yml",
+    "build": "tsc -p code/geopose && tsc -p code/vuforia && tsc -p code/directionsHTML && tsc -p code/directionsWebGL && tsc -p code/panorama-reality && tsc -p code/panoramas && tsc -p code/vuforia && tsc -p code/vuforiaDecals && tsc -p code/streetview-reality && tsc -p code/jsartoolkit && tsc -p code/vuforia-jsartoolkit && tsc -p code/tango",
+    "distsite": "jekyll build --config _config-master.yml"
+  },
+  "dependencies": {
+    "@argonjs/argon": "^1.4.0-0"
+  }
+}
