@@ -71,6 +71,8 @@ loader.load('../resources/fonts/helvetiker_bold.typeface.json', function (font) 
 
 
 function createTextMesh() {
+    
+/*
     var geometry = new THREE.Geometry();
 
     geometry.vertices.push(
@@ -82,14 +84,21 @@ function createTextMesh() {
     geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
 
     geometry.computeBoundingSphere();
+*/
+
+    var geometry = new THREE.BoxGeometry( 50, 50, 50 );
+
 
     var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
     var numFaces = geometry.faces.length;
-   // var numFaces = 5464;
     var displacement = new Float32Array(numFaces * 3 * 3);
     bufferGeometry.addAttribute('displacement', new THREE.BufferAttribute(displacement, 3));
 
-    var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+//    var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+
+    var texture = THREE.ImageUtils.loadTexture( 'charm-laulima.png' );
+    var material = new THREE.MeshBasicMaterial({map:texture, transparent:true});
+
     var mesh = new THREE.Mesh( bufferGeometry, material );
     return mesh;
 }
