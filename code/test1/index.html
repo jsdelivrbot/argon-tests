@@ -2,18 +2,21 @@
 ---
 <html>
 <head>
-    <title>Directions</title>
+    <title>Vuforia-JSARToolKit</title>
+    <meta name="keywords" content="{{ site.keywords }}, vuforia, jsartoolkit">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-  	<meta name="keywords" content="{{ site.keywords }}">
     <!-- Origin Trial Token, feature = WebVR, origin = https://argonjs.io, expires = 2017-06-06 -->
     <meta http-equiv="origin-trial" data-feature="WebVR" data-expires="2017-06-06" content="ArfXzMSluPfAfoVDD+ne9oWykUyDeLFD/z4/0uRCdZ1491aSrytWyj7gnGhwK1/Tzg/D+UOvNgD2+L9PWqF5XwwAAABceyJvcmlnaW4iOiJodHRwczovL2FyZ29uanMuaW86NDQzIiwiZmVhdHVyZSI6IldlYlZSIiwiZXhwaXJ5IjoxNDk2NzcxODA0LCJpc1N1YmRvbWFpbiI6dHJ1ZX0=">
     <script src="../resources/lib/three/three.min.js"></script>
     <script src="{{ site.argonjs }}"></script>
     <script src="../resources/lib/CSS3DArgonHUD.js"></script>
-    <script src="../resources/lib/CSS3DArgonRenderer.js"></script>
-    <style>
+    <script src="../resources/lib/stats.min.js"></script>
+    <script src="../resources/lib/three/modifiers/ExplodeModifier.js"></script>
+    <script src="../resources/lib/three/modifiers/TessellateModifier.js"></script>
+        <style>
+
 #description {
-  pointer-events:auto;
+  pointer-events: auto;
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
   padding: 10px;
   background-color:rgba(255,255,255,0.7);
@@ -33,21 +36,22 @@
   visibility: visible;
   opacity: 0;
 }
-    </style>
+
+</style>
 </head>
   <body>
     <div id="argon">
-      <div onclick="hideMe(this)"  id="description">
-        <h2>PRUEBA Six directions in HTML</h2>
-        <h5>(click to dismiss)</h5>
-        <p>This example displays a directional reference frame around the camera in Cartesian coordinates, using the EastUpSouth orientation for positive (x, y, z). A userLocation geospatial entity is created and positioned at the position of the user, and updated when the user's position changes. It uses HTML elements to put a text label at 200 meters in each of the negative/positive directions: x is west/east; y is down/up; z is north/south.</p>  
+      <div onclick="hideMe(this)" id="description">
+        <h2>Vuforia-JSARToolKit Demo</h2>
+          <h5>(click to dismiss)</h5>
+       <p>This example puts a dynamic 3D model of the text "argon.js" on the <a href="../resources/GVUBrochure.pdf">cover of the GVU Brochure</a> (if Vuforia is available) or the <a href="../resources/artoolkit/HiroPattern.pdf">ARToolKit Hiro marker</a> (if WebRTC is available).  When the marker is not seen, the text appears directly north.</p>
       </div>
     </div>
   </body>
-	<script>
-		function hideMe(elem) {
-		    elem.style.display = 'none';
-		}	
-	</script>
-  <script src="app.js"></script>
+  <script>
+    function hideMe(elem) {
+        elem.style.display = 'none';
+    } 
+  </script>
+      <script src="app.js"></script>
 </html>
