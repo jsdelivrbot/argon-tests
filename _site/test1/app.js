@@ -55,47 +55,43 @@ argonTextObject.position.z = -0.5;
 userLocation.add(argonTextObject);
 var loader = new THREE.FontLoader();
 loader.load('../resources/fonts/helvetiker_bold.typeface.json', function (font) {
-    var shaderMaterial = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        vertexShader: "\n            uniform float amplitude;\n            attribute vec3 customColor;\n            attribute vec3 displacement;\n            varying vec3 vNormal;\n            varying vec3 vColor;\n            void main() {\n                vNormal = normal;\n                vColor = customColor;\n                vec3 newPosition = position + normal * amplitude * displacement;\n                gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );\n            }\n        ",
-        fragmentShader: "\n            varying vec3 vNormal;\n            varying vec3 vColor;\n            void main() {\n                const float ambient = 0.4;\n                vec3 light = vec3( 1.0 );\n                light = normalize( light );\n                float directional = max( dot( vNormal, light ), 0.0 );\n                gl_FragColor = vec4( ( directional + ambient ) * vColor, 1.0 );\n            }\n        "
-    });
 
-//    var argonTextMesh = createTextMesh(font, "argon.js", shaderMaterial);
     var argonTextMesh = createTextMesh();
     argonTextObject.add(argonTextMesh);
-    argonTextObject.scale.set(0.001, 0.001, 0.001);
+    argonTextObject.scale.set(0.001, 0.001, 0.001); //tamano de la figura
     argonTextObject.position.z = -0.50;
     // add an argon updateEvent listener to slowly change the text over time.
     // we don't have to pack all our logic into one listener.
+    /*
     app.context.updateEvent.addEventListener(function () {
         uniforms.amplitude.value = 1.0 + Math.sin(Date.now() * 0.001 * 0.5);
     });
+    */
 });
 
 
 function createTextMesh() {
     var geometry = new THREE.Geometry();
 
-geometry.vertices.push(
-    new THREE.Vector3( -10,  10, 0 ),
-    new THREE.Vector3( -10, -10, 0 ),
-    new THREE.Vector3(  10, -10, 0 )
-);
+    geometry.vertices.push(
+        new THREE.Vector3( -10,  10, 0 ),
+        new THREE.Vector3( -10, -10, 0 ),
+        new THREE.Vector3(  10, -10, 0 )
+    );
 
-geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
+    geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
 
-geometry.computeBoundingSphere();
+    geometry.computeBoundingSphere();
 
-var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
-//var numFaces = textGeometry.faces.length;
-var numFaces = 5464;
-var displacement = new Float32Array(numFaces * 3 * 3);
-bufferGeometry.addAttribute('displacement', new THREE.BufferAttribute(displacement, 3));
+    var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
+    var numFaces = geometry.faces.length;
+   // var numFaces = 5464;
+    var displacement = new Float32Array(numFaces * 3 * 3);
+    bufferGeometry.addAttribute('displacement', new THREE.BufferAttribute(displacement, 3));
 
-var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-var mesh = new THREE.Mesh( bufferGeometry, material );
-return mesh;
+    var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+    var mesh = new THREE.Mesh( bufferGeometry, material );
+    return mesh;
 }
 
 
