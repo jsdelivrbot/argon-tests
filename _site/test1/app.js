@@ -9,6 +9,29 @@ var app = Argon.init(null, { 'sharedCanvas': true }, null);
 // for the user's location
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera();
+
+
+
+/*
+var controls = new THREE.TrackballControls( camera );
+controls.rotateSpeed = 1.0;
+controls.zoomSpeed = 1.2;
+controls.panSpeed = 0.8;
+controls.noZoom = false;
+controls.noPan = false;
+controls.staticMoving = true;
+controls.dynamicDampingFactor = 0.3;
+*/
+
+var boxScene = new THREE.Object3D;
+scene.add(boxScene);
+
+
+
+
+
+
+
 var userLocation = new THREE.Object3D();
 scene.add(camera);
 scene.add(userLocation);
@@ -36,7 +59,7 @@ var hud = new THREE.CSS3DArgonHUD();
 // the CSS3DArgonHUD hudElements[0].  We only put it in the left
 // hud since we'll be hiding it in stereo
 var description = document.getElementById('description');
-hud.hudElements[0].appendChild(description);
+//hud.hudElements[0].appendChild(description);
 app.view.element.appendChild(hud.domElement);
 // let's show the rendering stats
 var stats = new Stats();
@@ -46,64 +69,60 @@ app.view.setLayers([
     { source: renderer.domElement },
     { source: hud.domElement }
 ]);
-// create a bit of animated 3D text that says "argon.js" to display 
-var uniforms = {
-    amplitude: { type: "f", value: 0.0 }
-};
+
 var argonTextObject = new THREE.Object3D();
 argonTextObject.position.z = -0.5;
 userLocation.add(argonTextObject);
-var loader = new THREE.FontLoader();
-loader.load('../resources/fonts/helvetiker_bold.typeface.json', function (font) {
 
-    var argonTextMesh = createTextMesh();
-    argonTextObject.add(argonTextMesh);
-    argonTextObject.scale.set(0.001, 0.001, 0.001); //tamano de la figura
-    argonTextObject.position.z = -0.50;
-    // add an argon updateEvent listener to slowly change the text over time.
-    // we don't have to pack all our logic into one listener.
-    /*
-    app.context.updateEvent.addEventListener(function () {
-        uniforms.amplitude.value = 1.0 + Math.sin(Date.now() * 0.001 * 0.5);
-    });
-    */
-});
+var argonTextMesh = createTextMesh();
+argonTextObject.add(argonTextMesh);
+argonTextObject.scale.set(0.001, 0.001, 0.001); 
+argonTextObject.position.z = -0.50;
+
+
+var objects = [];
+objects.push(argonTextObject);
+boxScene.add(argonTextObject);
+
+
+/*
+var dragControls = new THREE.DragControls( argonTextObject, camera, renderer.domElement );
+dragControls.addEventListener( 'dragstart', function ( event ) { controls.enabled = false; } );
+dragControls.addEventListener( 'dragend', function ( event ) { controls.enabled = true; } );
+*/
+
+
+
+
 
 
 function createTextMesh() {
-    
-/*
-    var geometry = new THREE.Geometry();
 
-    geometry.vertices.push(
-        new THREE.Vector3( -10,  10, 0 ),
-        new THREE.Vector3( -10, -10, 0 ),
-        new THREE.Vector3(  10, -10, 0 )
-    );
-
-    geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
-
-    geometry.computeBoundingSphere();
-*/
-
-    var geometry = new THREE.BoxGeometry( 50, 50, 50 );
-
+    var geometry = new THREE.BoxGeometry( 50, 50, 50 ); //tamano de la figura
 
     var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
-    var numFaces = geometry.faces.length;
-    var displacement = new Float32Array(numFaces * 3 * 3);
-    bufferGeometry.addAttribute('displacement', new THREE.BufferAttribute(displacement, 3));
-
-//    var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+//    var numFaces = geometry.faces.length;
+//    var displacement = new Float32Array(numFaces * 3 * 3);
+//    bufferGeometry.addAttribute('displacement', new THREE.BufferAttribute(displacement, 3));
 
     var texture = THREE.ImageUtils.loadTexture( 'charm-laulima.png' );
     var material = new THREE.MeshBasicMaterial({map:texture, transparent:true});
 
     var mesh = new THREE.Mesh( bufferGeometry, material );
+
+//    mesh.position.z = -0.50;    //copia de linea 62
+
+
+ //   mesh.position.x = Math.random() * 1000 - 500;
+  //  mesh.position.y = Math.random() * 600 - 300;
+  //  mesh.position.z = Math.random() * 800 - 400;
+   
+
+
+
+
     return mesh;
 }
-
-
 
 
 app.vuforia.isAvailable().then(function (available) {
@@ -219,12 +238,12 @@ function initializeJSARToolKit() {
                             hiroObject.add(argonTextObject);
                             // note: currently artoolkit markers are always considered 1 meter across
                             // this scale is a temporary fix
-                            argonTextObject.scale.set(0.01, 0.01, 0.01);
+                    //        argonTextObject.scale.set(0.01, 0.01, 0.01);
                             argonTextObject.position.z = 0;
                         }
                         else if (hiroPose.poseStatus & Argon.PoseStatus.LOST) {
                             console.log("marker lost");
-                            argonTextObject.scale.set(0.001, 0.001, 0.001);
+                   //         argonTextObject.scale.set(0.001, 0.001, 0.001);
                             argonTextObject.position.z = -0.50;
                             userLocation.add(argonTextObject);
                         }
@@ -299,3 +318,281 @@ app.renderEvent.addEventListener(function () {
         }
     }
 });
+
+
+
+
+var isCrosshair = false;
+var INTERSECTED, SELECTED;
+var mouse = new THREE.Vector2();
+var raycaster = new THREE.Raycaster();
+document.addEventListener('keydown', onDocumentKeyStart, false);
+document.addEventListener('keyup', onDocumentKeyEnd, false);
+function onDocumentKeyStart(event) {
+    console.log("keyboard press");
+    if (event.defaultPrevented) {
+        return; // Should do nothing if the key event was already consumed.
+    }
+    if (event instanceof KeyboardEvent) {
+        if (!SELECTED && event.keyCode == " ".charCodeAt(0)) {
+            if (isCrosshair) {
+                mouse.x = mouse.y = 0;
+                if (handleSelection()) {
+                    event.preventDefault();
+                }
+            }
+        }
+    }
+}
+function onDocumentKeyEnd(event) {
+    console.log("keyboard release");
+    if (event.defaultPrevented) {
+        return; // Should do nothing if the key event was already consumed.
+    }
+    if (event instanceof KeyboardEvent) {
+        if (event.keyCode == " ".charCodeAt(0)) {
+            if (SELECTED && isCrosshair) {
+                if (handleRelease()) {
+                    event.preventDefault();
+                }
+            }
+        }
+    }
+}
+app.view.uiEvent.addEventListener(function (evt) {
+    var event = evt.event;
+    if (event.defaultPrevented) {
+        console.log("event was consumed");
+        console.log(event);
+        evt.forwardEvent();
+        return; // Should do nothing if the key event was already consumed.
+    }
+    // handle mouse movement
+    var ti, tx, ty;
+    switch (event.type) {
+        case "touchmove":
+            if (window.PointerEvent) {
+                evt.forwardEvent();
+                return; // ignore duplicate events
+            }
+            //console.log ("touch move: ");
+            //console.log(event);
+            event.preventDefault();
+            for (ti = 0; ti < event.changedTouches.length; ti++) {
+                //console.log("changedTouches[" + i + "].identifier = " + e.changedTouches[i].identifier);
+                if (event.changedTouches[ti].identifier == touchID)
+                    break;
+            }
+            // if we didn't find a move for the first touch, skip
+            if (ti == event.changedTouches.length) {
+                evt.forwardEvent();
+                return;
+            }
+        case "pointermove":
+        case "mousemove":
+            // if crosshair interaction, mousemove passed on
+            if (isCrosshair) {
+                evt.forwardEvent();
+                return;
+            }
+            if (event.type == "touchmove") {
+                tx = event.changedTouches[ti].clientX;
+                ty = event.changedTouches[ti].clientY;
+            }
+            else {
+                tx = event.clientX;
+                ty = event.clientY;
+            }
+            var x = (tx / window.innerWidth) * 2 - 1;
+            var y = -(ty / window.innerHeight) * 2 + 1;
+            if (SELECTED) {
+                mouse.x = x;
+                mouse.y = y;
+                raycaster.setFromCamera(mouse, camera);
+                // recompute the plane each time, in case the camera moved
+                var worldLoc = user.localToWorld(tempPos.copy(SELECTED.position));
+                plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(plane.normal), 
+                //user.getWorldDirection( new THREE.Vector3(0,0,1) ),
+                worldLoc);
+                if (raycaster.ray.intersectPlane(plane, intersection)) {
+                    // planes, rays and intersections are in the local "world" 3D coordinates
+                    var ptInWorld = user.worldToLocal(intersection).sub(offset);
+                    SELECTED.position.copy(ptInWorld);
+                    // SELECTED.entity.position.setValue(SELECTED.position, app.context.user);
+                }
+            }
+            else {
+                handlePointerMove(x, y);
+                evt.forwardEvent();
+            }
+            return;
+        case "touchstart":
+            if (window.PointerEvent) {
+                evt.forwardEvent();
+                return; // ignore duplicate events
+            }
+            console.log("touch start: ");
+            console.log(event);
+            event.preventDefault();
+            // try the first new touch ... seems unlikely there will be TWO new touches
+            // at exactly the same time
+            ti = 0;
+        case 'pointerdown':
+        case 'mousedown':
+            // ignore additional touches or pointer down events after the first selection
+            if (SELECTED) {
+                // perhaps multitouch devices can do a second pointer down ... need
+                // to keep track of which pointer event, I suppose!
+                evt.forwardEvent();
+                return;
+            }
+            if (isCrosshair) {
+                if (event.type == "mousedown") {
+                    // ignore mouse down events for selection in crosshair mode, they must
+                    // use the keyboard
+                    console.log("mousedown ignored");
+                    evt.forwardEvent();
+                    return;
+                }
+                mouse.x = mouse.y = 0;
+            }
+            else {
+                if (event.type == "touchstart") {
+                    tx = event.changedTouches[ti].clientX;
+                    ty = event.changedTouches[ti].clientY;
+                }
+                else {
+                    tx = event.clientX;
+                    ty = event.clientY;
+                }
+                mouse.x = (tx / window.innerWidth) * 2 - 1;
+                mouse.y = -(ty / window.innerHeight) * 2 + 1;
+            }
+            console.log("mousedown");
+            if (handleSelection()) {
+                if (event.type == "touchstart") {
+                    touchID = event.changedTouches[ti].identifier;
+                }
+                if (event.type == "touchstart" || event.type == "pointerdown") {
+                    if (!isCrosshair) {
+                        if (INTERSECTED)
+                            INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+                        INTERSECTED = SELECTED;
+                        INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+                        INTERSECTED.material.color.setHex(0xffff33);
+                    }
+                }
+            }
+            else {
+                evt.forwardEvent();
+            }
+            break;
+        case "touchend":
+            if (window.PointerEvent) {
+                evt.forwardEvent();
+                return; // ignore duplicate events
+            }
+            console.log("touch end: ");
+            console.log(event);
+            event.preventDefault();
+            for (ti = 0; ti < event.changedTouches.length; ti++) {
+                //console.log("changedTouches[" + i + "].identifier = " + e.changedTouches[i].identifier);
+                if (event.changedTouches[ti].identifier == touchID)
+                    break;
+            }
+            // if we didn't find a move for the first touch, skip
+            if (ti == event.changedTouches.length) {
+                evt.forwardEvent();
+                return;
+            }
+        case 'pointerup':
+        case 'mouseup':
+            if (isCrosshair && event.type == "mouseup") {
+                // ignore mouse up events for selection in crosshair mode, they must
+                // use the keyboard
+                console.log("release ignored");
+                evt.forwardEvent();
+                return;
+            }
+            console.log("release");
+            if (SELECTED) {
+                if (handleRelease()) {
+                    if ((event.type == "touchend" || event.type == "pointerup") && !isCrosshair) {
+                        if (INTERSECTED)
+                            INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+                        INTERSECTED = null;
+                    }
+                }
+            }
+            else {
+                evt.forwardEvent();
+            }
+            break;
+        default:
+            evt.forwardEvent();
+    }
+    //console.log(event);
+});
+function handleSelection() {
+    scene.updateMatrixWorld(true);
+    raycaster.setFromCamera(mouse, camera);
+    console.log("touch!");
+    var intersects = raycaster.intersectObjects(objects);
+    if (intersects.length > 0) {
+        console.log("touch intersect!");
+        var object = intersects[0].object;
+        var date = app.context.getTime();
+        var defaultFrame = app.context.getDefaultReferenceFrame();
+        console.log("------");
+        console.log("touch FIXED pos=" + JSON.stringify(object.position));
+        console.log("touch FIXED quat=" + JSON.stringify(object.quaternion));
+        THREE.SceneUtils.detach(object, boxScene, scene);
+        THREE.SceneUtils.attach(object, scene, user);
+        // var newpose = app.context.getEntityPose(object.entity);
+        // console.log("touch DEVICE pos=" + newpose.position);
+        // console.log("touch DEVICE quat=" + newpose.orientation)
+        // console.log("touch DEVICE _value pos=" + object.entity.position._value);
+        // console.log("touch DEVICE _value quat=" + object.entity.orientation._value)
+        // console.log("------");
+        SELECTED = object;
+        // console.log("touch DEVICE pos=" + boxPose.position);
+        // console.log("touch DEVICE quat=" + boxPose.orientation)
+        // console.log("touch DEVICE _value pos=" + (object.entity.position as any)._value);
+        // console.log("touch DEVICE _value quat=" + (object.entity.orientation as any)._value)
+        // console.log("------");
+        if (!isCrosshair) {
+            var worldLoc = user.localToWorld(tempPos.copy(SELECTED.position));
+            plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(plane.normal), worldLoc);
+            if (raycaster.ray.intersectPlane(plane, intersection)) {
+                //offset.copy( user.worldToLocal(( intersection ).sub( worldLoc )));
+                offset.copy(user.worldToLocal(intersection).sub(SELECTED.position));
+            }
+        }
+        return true;
+    }
+    return false;
+}
+function handlePointerMove(x, y) {
+    if (SELECTED) {
+        return;
+    }
+    mouse.x = x;
+    mouse.y = y;
+    scene.updateMatrixWorld(true);
+    raycaster.setFromCamera(mouse, camera);
+    var intersects = raycaster.intersectObjects(objects);
+    if (intersects.length > 0) {
+        if (INTERSECTED != intersects[0].object) {
+            if (INTERSECTED)
+                INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+            INTERSECTED = intersects[0].object;
+            INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+            INTERSECTED.material.color.setHex(0xffff33);
+        }
+    }
+    else {
+        if (INTERSECTED)
+            INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+        INTERSECTED = null;
+    }
+}
